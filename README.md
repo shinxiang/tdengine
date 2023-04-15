@@ -39,5 +39,5 @@ import (
 ```
 ## Example
 
-Check example code [example](https://github.com/shinxiang/tdengine/example/example.go)
+Check example code [example](https://github.com/shinxiang/tdengine/blob/master/example/example.go)
 
