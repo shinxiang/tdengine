@@ -5,7 +5,7 @@
 
 ## Model Struct
 - 结构体中字段的顺序必须与超级表中字段的顺序相同，字段类型相匹配
-- 结构体的第一个字段必须是time.Time类型的TIMESTAMP字段
+- 结构体的第一个字段必须是time.Time或int64类型的TIMESTAMP字段
 - 结构体中tag标签用法和[GORM](https://gorm.io/docs/)类似，关键字是 td（ 或 sql）
 - 字段名标识为"column"，超级表TAG字段标识为"TAG"，忽略字段为"-"
   示例:
