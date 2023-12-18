@@ -75,8 +75,8 @@ func (t *TDengine) debug(v string) {
 }
 
 // Exec executes a query without returning any rows.
-func (t *TDengine) Exec(sql string) (rowsAffected int64, err error) {
-	result, err := t.conn.Exec(sql)
+func (t *TDengine) Exec(sql string, args ...interface{}) (rowsAffected int64, err error) {
+	result, err := t.conn.Exec(sql, args...)
 	if err != nil {
 		t.debug(fmt.Sprintf("%s \n\033[36;31m[%v]\033[0m", sql, err))
 		return
@@ -87,7 +87,7 @@ func (t *TDengine) Exec(sql string) (rowsAffected int64, err error) {
 }
 
 // Query executes a query that returns result.
-func (t *TDengine) Query(sql string, result interface{}) error {
+func (t *TDengine) Query(sql string, result interface{}, args ...interface{}) error {
 	if result == nil {
 		return errors.New("result is nil")
 	}
@@ -101,7 +101,7 @@ func (t *TDengine) Query(sql string, result interface{}) error {
 		return errors.New("result is not a pointer of struct")
 	}
 
-	rows, err := t.conn.Query(sql)
+	rows, err := t.conn.Query(sql, args...)
 	if err != nil {
 		t.debug(fmt.Sprintf("%s \n\033[36;31m[%v]\033[0m", sql, err))
 		return err
