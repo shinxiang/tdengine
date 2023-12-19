@@ -86,7 +86,7 @@ func (t *TDengine) Exec(sql string, args ...interface{}) (rowsAffected int64, er
 	return
 }
 
-// Query executes a query that returns result.
+// Query finds all records that returns result.
 func (t *TDengine) Query(result interface{}, sql string, args ...interface{}) error {
 	if result == nil {
 		return errors.New("result is nil")
@@ -96,10 +96,10 @@ func (t *TDengine) Query(result interface{}, sql string, args ...interface{}) er
 		return errors.New("result is not a pointer")
 	}
 	rsRow := reflect.Indirect(rs)
-	rsRowType := rsRow.Type().Elem()
 	if rsRow.Type().Kind() != reflect.Slice {
-		return errors.New("result is not a pointer of struct")
+		return errors.New("result is not a pointer of slice")
 	}
+	rsRowType := rsRow.Type().Elem()
 
 	rows, err := t.conn.Query(sql, args...)
 	if err != nil {
@@ -158,6 +158,79 @@ func (t *TDengine) Query(result interface{}, sql string, args ...interface{}) er
 	}
 
 	return nil
+}
+
+// First finds the first record that return a result.
+func (t *TDengine) First(result interface{}, sql string, args ...interface{}) error {
+	if result == nil {
+		return errors.New("result is nil")
+	}
+	rs := reflect.ValueOf(result)
+	if rs.Type().Kind() != reflect.Ptr {
+		return errors.New("result is not a pointer")
+	}
+	rsRow := reflect.Indirect(rs)
+	if rsRow.Type().Kind() != reflect.Struct {
+		return errors.New("result is not a pointer of struct")
+	}
+
+	rows, err := t.conn.Query(sql, args...)
+	if err != nil {
+		t.debug(fmt.Sprintf("%s \n\033[36;31m[%v]\033[0m", sql, err))
+		return err
+	}
+	t.debug(sql)
+	defer rows.Close()
+
+	columns, _ := rows.Columns()                   // columns name
+	var values = make([]interface{}, len(columns)) // columns value
+	var pDest = make([]interface{}, len(columns))
+	var index = make(map[string]int)
+	for i, name := range columns {
+		index[name] = i
+		pDest[i] = &values[i]
+	}
+
+	for rows.Next() {
+		// Scan value must be a pointer
+		err = rows.Scan(pDest...)
+		if err != nil {
+			return err
+		}
+
+		// New instance
+		var item reflect.Value
+		item = reflect.New(rsRow.Type()).Elem()
+
+		for i := 0; i < item.NumField(); i++ {
+			if field := item.Field(i); field.CanSet() {
+				structField := util.NewStructField(item.Type().Field(i).Tag)
+
+				if columnName, ok := structField.TagSettingsGet("COLUMN"); ok {
+					if idx, found := index[columnName]; found {
+						value := reflect.ValueOf(values[idx])
+						util.SetFieldValue(&field, value)
+					}
+				}
+			}
+		}
+		rsRow.Set(item)
+		break
+	}
+
+	return nil
+}
+
+// Count return the count of records.
+func (t *TDengine) Count(sql string, args ...interface{}) (int64, error) {
+	var result = struct {
+		Count int64 `td:"column:total_count"`
+	}{}
+	err := t.First(&result, "SELECT COUNT(*) AS total_count FROM ("+sql+") AS _TEMPORARY_TABLE_COUNT", args...)
+	if err != nil {
+		return 0, err
+	}
+	return result.Count, nil
 }
 
 // Insert one struct data

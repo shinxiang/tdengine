@@ -35,6 +35,7 @@ func main() {
 	insertTest(db)
 	insertBatchTest(db)
 	queryTest(db)
+	countTest(db)
 }
 
 func createDatabase(db *tdengine.TDengine) {
@@ -101,4 +102,13 @@ func queryTest(db *tdengine.TDengine) {
 	}
 
 	log.Println("Query Data:", item)
+}
+
+func countTest(db *tdengine.TDengine) {
+	count, err := db.Count("SELECT * FROM meters order by device_id")
+	if err != nil {
+		log.Fatalln("failed to count from table, err:", err)
+	}
+
+	log.Println("Total Count:", count)
 }
