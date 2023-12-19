@@ -95,7 +95,7 @@ func insertBatchTest(db *tdengine.TDengine) {
 
 func queryTest(db *tdengine.TDengine) {
 	var item []Model
-	err := db.Query("SELECT * FROM meters order by device_id", &item)
+	err := db.Query(&item, "SELECT * FROM meters order by device_id")
 	if err != nil {
 		log.Fatalln("failed to select from table, err:", err)
 	}

@@ -4,14 +4,14 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/shinxiang/tdengine/scope"
-	"github.com/shinxiang/tdengine/util"
 	"log"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/shinxiang/tdengine/scope"
+	"github.com/shinxiang/tdengine/util"
 	_ "github.com/taosdata/driver-go/v3/taosRestful"
 )
 
@@ -87,7 +87,7 @@ func (t *TDengine) Exec(sql string, args ...interface{}) (rowsAffected int64, er
 }
 
 // Query executes a query that returns result.
-func (t *TDengine) Query(sql string, result interface{}, args ...interface{}) error {
+func (t *TDengine) Query(result interface{}, sql string, args ...interface{}) error {
 	if result == nil {
 		return errors.New("result is nil")
 	}

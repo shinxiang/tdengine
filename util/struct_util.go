@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func SetFieldValue(field *reflect.Value, value reflect.Value) {
@@ -53,8 +54,9 @@ func toBool(data reflect.Value) bool {
 		b, err := strconv.ParseBool(data.String())
 		if err == nil {
 			return b
+		} else {
+			return false
 		}
-		return false
 	default:
 		return false
 	}
@@ -75,11 +77,19 @@ func toInt(data reflect.Value) int64 {
 	case reflect.Float32, reflect.Float64:
 		return int64(data.Float())
 	case reflect.String:
-		v, err := strconv.ParseInt(data.String(),10, 64)
+		v, err := strconv.ParseInt(data.String(), 10, 64)
 		if err == nil {
 			return v
+		} else {
+			return 0
 		}
-		return 0
+	case reflect.Struct:
+		v := data.Interface()
+		if t, ok := v.(time.Time); ok {
+			return t.UnixMilli()
+		} else {
+			return 0
+		}
 	default:
 		return 0
 	}
@@ -96,15 +106,23 @@ func toUint(data reflect.Value) uint64 {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return uint64(data.Int())
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		return uint64(data.Uint())
+		return data.Uint()
 	case reflect.Float32, reflect.Float64:
 		return uint64(data.Float())
 	case reflect.String:
-		v, err := strconv.ParseUint(data.String(),10, 64)
+		v, err := strconv.ParseUint(data.String(), 10, 64)
 		if err == nil {
 			return v
+		} else {
+			return 0
 		}
-		return 0
+	case reflect.Struct:
+		v := data.Interface()
+		if t, ok := v.(time.Time); ok {
+			return uint64(t.UnixMilli())
+		} else {
+			return 0
+		}
 	default:
 		return 0
 	}
@@ -123,13 +141,14 @@ func toFloat(data reflect.Value) float64 {
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		return float64(data.Uint())
 	case reflect.Float32, reflect.Float64:
-		return float64(data.Float())
+		return data.Float()
 	case reflect.String:
-		v, err := strconv.ParseFloat(data.String(),64)
+		v, err := strconv.ParseFloat(data.String(), 64)
 		if err == nil {
 			return v
+		} else {
+			return 0
 		}
-		return 0
 	default:
 		return 0
 	}
